@@ -4,7 +4,6 @@ import PropTypes from "prop-types";
 import Spinner from "../spinner/Spinner";
 import ErrorMessage from "../errorMessage/ErrorMessage";
 import MarvelService from "../../services/MarvelService";
-
 import "./charList.scss";
 
 class CharList extends Component {
@@ -35,9 +34,12 @@ class CharList extends Component {
   };
 
   onCharListLoaded = (newCharList) => {
-    let ended = newCharList.length < 9 ? true : false;
+    let ended = false;
+    if (newCharList.length < 9) {
+      ended = true;
+    }
 
-    this.setState(({ charList, offset }) => ({
+    this.setState(({ offset, charList }) => ({
       charList: [...charList, ...newCharList],
       loading: false,
       newItemLoading: false,
@@ -48,27 +50,60 @@ class CharList extends Component {
 
   onError = () => {
     this.setState({
-      loading: false,
       error: true,
+      loading: false,
     });
   };
 
-  // Этот метод создан для оптимизации, чтобы не помещать такую конструкцию в метод render.
+  itemRefs = [];
 
-  renderCharListItems(charList) {
-    const charListItems = charList.map((item) => {
-      const { id, name, thumbnail } = item;
-      const { onCharSelected } = this.props;
+  setRef = (ref) => {
+    this.itemRefs.push(ref);
+  };
 
-      return <CharListItem key={id} name={name} thumbnail={thumbnail} onCharSelected={() => onCharSelected(id)} />;
+  focusOnItem = (id) => {
+    this.itemRefs.forEach((item) => item.classList.remove("char__item_selected"));
+    this.itemRefs[id].classList.add("char__item_selected");
+    this.itemRefs[id].focus();
+  };
+
+  renderItems(arr) {
+    const items = arr.map((item, i) => {
+      let imgStyle = { objectFit: "cover" };
+      if (item.thumbnail === "http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg") {
+        imgStyle = { objectFit: "unset" };
+      }
+
+      return (
+        <li
+          className="char__item"
+          tabIndex={0}
+          ref={this.setRef}
+          key={item.id}
+          onClick={() => {
+            this.props.onCharSelected(item.id);
+            this.focusOnItem(i);
+          }}
+          onKeyPress={(e) => {
+            if (e.key === " " || e.key === "Enter") {
+              this.props.onCharSelected(item.id);
+              this.focusOnItem(i);
+            }
+          }}
+        >
+          <img src={item.thumbnail} alt={item.name} style={imgStyle} />
+          <div className="char__name">{item.name}</div>
+        </li>
+      );
     });
-    // А эта конструкция вынесена для центровки спиннера/ошибки.
-    return <ul className="char__grid">{charListItems}</ul>;
+
+    return <ul className="char__grid">{items}</ul>;
   }
 
   render() {
-    const { charList, loading, error, newItemLoading, offset, charEnded } = this.state;
-    const items = this.renderCharListItems(charList);
+    const { charList, loading, error, offset, newItemLoading, charEnded } = this.state;
+
+    const items = this.renderItems(charList);
 
     const errorMessage = error ? <ErrorMessage /> : null;
     const spinner = loading ? <Spinner /> : null;
@@ -82,8 +117,8 @@ class CharList extends Component {
         <button
           className="button button__main button__long"
           disabled={newItemLoading}
-          onClick={() => this.onRequest(offset)}
           style={{ display: charEnded ? "none" : "block" }}
+          onClick={() => this.onRequest(offset)}
         >
           <div className="inner">load more</div>
         </button>
@@ -92,19 +127,8 @@ class CharList extends Component {
   }
 }
 
-const CharListItem = ({ name, thumbnail, onCharSelected }) => {
-  let imgStyle = thumbnail.match(/image_not_available/) ? { objectFit: "unset" } : { objectFit: "cover" };
-
-  return (
-    <li className="char__item" onClick={onCharSelected}>
-      <img src={thumbnail} alt={name} style={imgStyle} />
-      <div className="char__name">{name}</div>
-    </li>
-  );
-};
-
 CharList.propTypes = {
-  onCharSelected: PropTypes.func,
+  onCharSelected: PropTypes.func.isRequired,
 };
 
 export default CharList;
