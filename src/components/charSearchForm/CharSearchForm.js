@@ -12,10 +12,8 @@ const setContent = (process, data) => {
   switch (process) {
     case "waiting":
       return null;
-      break;
     case "loading":
       return null;
-      break;
     case "confirmed":
       return !data ? null : data.length > 0 ? (
         data.map((item) => (
@@ -29,14 +27,12 @@ const setContent = (process, data) => {
       ) : (
         <div className="char__search-error">The character was not found. Check the name and try again</div>
       );
-      break;
     case "error":
       return (
         <div className="char__search-critical-error">
           <ErrorMessage />
         </div>
       );
-      break;
     default:
       throw new Error("Unecpected process state");
   }

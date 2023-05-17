@@ -12,16 +12,12 @@ const setContent = (process, Component, newItemLoading) => {
   switch (process) {
     case "waiting":
       return <Spinner />;
-      break;
     case "loading":
       return newItemLoading ? <Component /> : <Spinner />;
-      break;
     case "confirmed":
       return <Component />;
-      break;
     case "error":
       return <ErrorMessage />;
-      break;
     default:
       throw new Error("Unecpected process state");
   }
@@ -33,7 +29,7 @@ const ComicsList = () => {
   const [offset, setOffset] = useState(0);
   const [comicsEnded, setComicsEnded] = useState(false);
 
-  const { loading, error, process, setProcess, getAllComics } = useMarvelService();
+  const { process, setProcess, getAllComics } = useMarvelService();
 
   useEffect(() => {
     onRequest(offset, true);
@@ -58,16 +54,10 @@ const ComicsList = () => {
   };
 
   function renderItems(arr) {
-    let delay = 0;
-
     const items = arr.map((item, i) => {
-      if (i >= arr.length - 8) {
-        delay += 200;
-      }
-
       return (
-        <CSSTransition key={i} timeout={500 + delay} classNames="comics__item">
-          <li key={i} className="comics__item" style={{ transitionDelay: `${delay}ms` }}>
+        <CSSTransition key={i} timeout={500} classNames="comics__item">
+          <li key={i} className="comics__item">
             <Link to={`${item.id}`}>
               <img src={item.thumbnail} alt={item.title} className="comics__item-img" />
               <div className="comics__item-name">{item.title}</div>
